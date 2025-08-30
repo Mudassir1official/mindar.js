@@ -1,18 +1,26 @@
 
+<!DOCTYPE html>
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Your AR Demo</title>
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <!-- Load A-Frame first, then MindAR -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image-aframe.js"></script>
   </head>
   <body>
+    <!-- Status indicator -->
+    <div id="status" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; z-index: 1000;">
+      Status: Loading...
+    </div>
+
     <a-scene 
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;" 
       color-space="sRGB" 
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
+      device-orientation-permission-ui="enabled: false"
+      embedded>
       
       <a-assets>
         <a-asset-item id="base.glb" src="./base.glb"></a-asset-item>
@@ -21,23 +29,70 @@
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Your original 3D model -->
+        <!-- Test objects to see if AR tracking works -->
+        <a-box 
+          position="0 0 0.1" 
+          scale="0.1 0.1 0.1" 
+          color="#ff0000" 
+          animation="property: rotation; to: 0 360 0; dur: 2000; loop: true">
+        </a-box>
+        
+        <a-text 
+          position="0 0.2 0" 
+          scale="0.3 0.3 0.3" 
+          value="AR FOUND!" 
+          color="white" 
+          align="center">
+        </a-text>
+        
+        <!-- Your 3D model (hidden until we confirm AR works) -->
         <a-gltf-model 
           rotation="0 0 0" 
           position="0 0 0.1" 
           scale="0.05 0.05 0.05" 
           src="#base.glb" 
+          visible="false"
           animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">
         </a-gltf-model>
-        
-        <!-- Backup test box if model fails -->
-        <a-box 
-          position="0 0.2 0" 
-          scale="0.1 0.1 0.1" 
-          color="red" 
-          animation="property: rotation; to: 0 360 0; dur: 2000; loop: true">
-        </a-box>
       </a-entity>
     </a-scene>
+
+    <script>
+      // Simple status tracker
+      function updateStatus(message) {
+        const status = document.getElementById('status');
+        if (status) {
+          status.textContent = 'Status: ' + message;
+        }
+        console.log('Status: ' + message);
+      }
+
+      // Wait for everything to load
+      document.addEventListener('DOMContentLoaded', function() {
+        updateStatus('Page loaded');
+        
+        // Check if A-Frame loaded
+        setTimeout(() => {
+          if (typeof AFRAME !== 'undefined') {
+            updateStatus('A-Frame loaded ✓');
+            
+            // Listen for AR events
+            const scene = document.querySelector('a-scene');
+            if (scene) {
+              scene.addEventListener('arReady', () => {
+                updateStatus('AR Ready ✓ - Point at target!');
+              });
+              
+              scene.addEventListener('arError', (e) => {
+                updateStatus('AR Error ❌');
+                console.error('AR Error:', e.detail);
+              });
+            }
+          } else {
+            updateStatus('A-Frame failed ❌');
+          }
+        }, 2000);
+      });
+    </script>
   </body>
 </html>
