@@ -1,262 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindAR.js Image Tracking Demo</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MindAR.js demo</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        
-        #container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-        }
-        
-        #ar-scene {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .ui-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 200;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-        }
-        
-        .hidden {
-            display: none;
-        }
+      html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; }
+      .loading { position: fixed; inset: 0; display: grid; place-items: center; color: #fff; font: 16px/1.4 system-ui, sans-serif; }
+      .loading[hidden] { display: none; }
     </style>
-</head>
-<body>
-    <div id="container">
-        <div id="loading" class="loading">
-            <h3>Loading MindAR...</h3>
-            <p>Please wait while we initialize the AR experience</p>
-        </div>
-        
-        <div class="ui-overlay">
-            <div>MindAR.js Demo</div>
-            <div id="status">Initializing...</div>
-        </div>
-        
-        <a-scene 
-            id="ar-scene"
-            mindar-image="imageTargetSrc: ./targets.mind; showStats: false; uiLoading: no; uiScanning: no; uiError: no;"
-            color-space="sRGB" 
-            renderer="colorManagement: true, physicallyCorrectLights" 
-            vr-mode-ui="enabled: false" 
-            device-orientation-permission-ui="enabled: false">
-            
-            <!-- Assets -->
-            <a-assets>
-                <a-asset-item id="model" src="./base.glb"></a-asset-item>
-            </a-assets>
-            
-            <!-- Camera -->
-            <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="far: 10000; objects: .clickable"></a-camera>
-            
-            <!-- Image Target Entity -->
-            <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
-                <!-- 3D Model -->
-                <a-gltf-model 
-                    id="model-entity"
-                    src="#model"
-                    position="0 0 0" 
-                    scale="0.1 0.1 0.1"
-                    rotation="0 0 0"
-                    animation="property: rotation; to: 0 360 0; loop: true; dur: 10000">
-                </a-gltf-model>
-                
-                <!-- Additional 3D objects for enhanced experience -->
-                <a-box 
-                    position="-0.5 0.5 0" 
-                    scale="0.2 0.2 0.2" 
-                    color="#FF6B6B"
-                    animation="property: rotation; to: 360 360 0; loop: true; dur: 3000">
-                </a-box>
-                
-                <a-sphere 
-                    position="0.5 0.5 0" 
-                    radius="0.1" 
-                    color="#4ECDC4"
-                    animation="property: position; to: 0.5 0.8 0; dir: alternate; loop: true; dur: 2000">
-                </a-sphere>
-                
-                <a-text 
-                    value="MindAR.js Tracking!" 
-                    position="0 0.8 0" 
-                    align="center" 
-                    color="#FFFFFF"
-                    scale="0.5 0.5 0.5">
-                </a-text>
-                
-                <!-- Lighting -->
-                <a-light type="ambient" color="#ffffff" intensity="0.4"></a-light>
-                <a-light type="directional" position="0 1 0" intensity="0.6"></a-light>
-            </a-entity>
-        </a-scene>
-    </div>
+    <!-- A-Frame core -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- MindAR for A-Frame -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-aframe.prod.js"></script>
+  </head>
+  <body>
+    <div id="loading" class="loading">Loading AR… If camera access is blocked, use HTTPS or localhost.</div>
 
-    <!-- Include A-Frame -->
-    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1c2407b26c61958baa93967b5412487cd94b290b/dist/aframe-master.min.js"></script>
-    
-    <!-- Include MindAR -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
+      renderer="alpha: true; antialias: true; precision: mediump"
+      color-space="sRGB"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: true"
+      embedded
+    >
+      <a-assets timeout="15000">
+        <a-asset-item id="model" src="./base.glb"></a-asset-item>
+      </a-assets>
+
+      <!-- Lights for the GLB model -->
+      <a-entity light="type: ambient; intensity: 0.7"></a-entity>
+      <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
+
+      <!-- Target index 0 from targets.mind -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-gltf-model src="#model" position="0 0 0" rotation="0 0 0" scale="0.1 0.1 0.1"></a-gltf-model>
+      </a-entity>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    </a-scene>
+
     <script>
-        // Global variables
-        let arSystem;
-        let isTracking = false;
-        
-        // Wait for A-Frame to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            const sceneEl = document.querySelector('a-scene');
-            const loadingEl = document.getElementById('loading');
-            const statusEl = document.getElementById('status');
-            const targetEntity = document.querySelector('#target-entity');
-            
-            // Scene loaded event
-            sceneEl.addEventListener('loaded', function() {
-                console.log('A-Frame scene loaded');
-                initializeAR();
-            });
-            
-            function initializeAR() {
-                console.log('Initializing AR...');
-                
-                // Get the MindAR system
-                arSystem = sceneEl.systems['mindar-image'];
-                
-                if (!arSystem) {
-                    console.error('MindAR system not found');
-                    statusEl.textContent = 'Error: MindAR system not found';
-                    return;
-                }
-                
-                // Setup event listeners
-                setupEventListeners();
-                
-                // Start AR
-                startAR();
-            }
-            
-            function setupEventListeners() {
-                // Target found event
-                targetEntity.addEventListener('targetFound', event => {
-                    console.log('Target found!');
-                    isTracking = true;
-                    statusEl.textContent = 'Target Detected!';
-                    
-                    // Add some visual feedback
-                    targetEntity.setAttribute('visible', true);
-                });
-                
-                // Target lost event
-                targetEntity.addEventListener('targetLost', event => {
-                    console.log('Target lost!');
-                    isTracking = false;
-                    statusEl.textContent = 'Scanning for target...';
-                });
-                
-                // AR Ready event
-                sceneEl.addEventListener('arReady', (event) => {
-                    console.log('AR is ready!');
-                    loadingEl.classList.add('hidden');
-                    statusEl.textContent = 'Point camera at target image';
-                });
-                
-                // AR Error event
-                sceneEl.addEventListener('arError', (event) => {
-                    console.error('AR Error:', event.detail);
-                    statusEl.textContent = 'AR Error: ' + event.detail.error;
-                    loadingEl.classList.add('hidden');
-                });
-            }
-            
-            async function startAR() {
-                try {
-                    statusEl.textContent = 'Starting camera...';
-                    
-                    // Check if camera permission is available
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                        // Request camera permission
-                        await navigator.mediaDevices.getUserMedia({ video: true });
-                        console.log('Camera permission granted');
-                    }
-                    
-                    statusEl.textContent = 'Initializing AR engine...';
-                    
-                    // The MindAR system will automatically start when the scene is ready
-                    console.log('AR initialization process started');
-                    
-                } catch (error) {
-                    console.error('Failed to start AR:', error);
-                    statusEl.textContent = 'Error: ' + error.message;
-                    loadingEl.classList.add('hidden');
-                }
-            }
-            
-            // Add some interaction capabilities
-            const modelEntity = document.querySelector('#model-entity');
-            if (modelEntity) {
-                modelEntity.addEventListener('click', function() {
-                    if (isTracking) {
-                        // Toggle animation speed
-                        const currentDur = modelEntity.getAttribute('animation').dur;
-                        const newDur = currentDur === 10000 ? 2000 : 10000;
-                        modelEntity.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: ' + newDur);
-                        console.log('Animation speed changed!');
-                    }
-                });
-            }
-        });
-        
-        // Handle page visibility changes
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                console.log('Page hidden - pausing AR');
-            } else {
-                console.log('Page visible - resuming AR');
-            }
-        });
-        
-        // Error handling
-        window.addEventListener('error', function(event) {
-            console.error('Global error:', event.error);
-            document.getElementById('status').textContent = 'Error: ' + event.error.message;
-        });
-        
-        // Unhandled promise rejection handling
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('Unhandled promise rejection:', event.reason);
-            document.getElementById('status').textContent = 'Error: ' + event.reason;
-        });
+      // Hide custom loader when A-Frame finishes
+      const loading = document.getElementById('loading');
+      window.addEventListener('load', () => {
+        const scene = document.querySelector('a-scene');
+        if (scene?.hasLoaded) loading.hidden = true; else scene?.addEventListener('loaded', () => loading.hidden = true);
+      });
     </script>
-</body>
+  </body>
 </html>
