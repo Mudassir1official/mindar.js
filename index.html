@@ -10,30 +10,40 @@
 <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
   </head>
   <body>
-    <div id="loading" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 10px; text-align: center;">
-      Loading AR...
+    <!-- Loading Screen -->
+    <div id="loading" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 10px; text-align: center; font-family: Arial;">
+      <div style="font-size: 18px; margin-bottom: 10px;">🔄 Loading AR...</div>
+      <div style="font-size: 12px; color: #666;">Allow camera access when prompted</div>
     </div>
     
-    <div id="debug-info" style="position: fixed; top: 10px; left: 10px; z-index: 1000; background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-width: 300px;">
-      <div>Status: Initializing...</div>
-      <div id="camera-status">Camera: Not checked</div>
-      <div id="ar-status">AR: Not ready</div>
-      <div id="target-status">Target: Not detected</div>
-      <div id="model-status">Model: Not loaded</div>
+    <!-- Debug Info Panel -->
+    <div id="debug-info" style="position: fixed; top: 10px; left: 10px; z-index: 999; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 11px; max-width: 280px; border: 1px solid #333;">
+      <div style="font-weight: bold; margin-bottom: 5px;">🎯 AR Status Monitor</div>
+      <div id="camera-status">📷 Camera: Initializing...</div>
+      <div id="ar-status">🔍 AR Engine: Starting...</div>
+      <div id="target-status">🎯 Target: Waiting...</div>
+      <div id="model-status">📦 Model: Loading...</div>
     </div>
     
+    <!-- AR Scene -->
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;" 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no; showStats: false;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights, antialias: true, alpha: true;" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
-      embedded>
+      embedded
+      style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;">
+      
+      <!-- Assets -->
       <a-assets>
         <a-asset-item id="base.glb" src="./base.glb"></a-asset-item>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <!-- AR Camera -->
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse"></a-camera>
+      
+      <!-- AR Target with 3D Model -->
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model 
           id="ar-model"
@@ -42,115 +52,131 @@
           scale="0.005 0.005 0.005" 
           src="#base.glb" 
           animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"
-          model-loaded></a-gltf-model>
+          visible="true"></a-gltf-model>
       </a-entity>
     </a-scene>
 
     <script>
-      // Debug script to check camera permissions and MindAR initialization
+      // Complete AR Debug and Initialization System
       document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded');
+        console.log('🚀 AR App Starting...');
         
-        // Helper function to update debug info
-        function updateStatus(elementId, message, isSuccess = false) {
+        // Status update helper with emojis and colors
+        function updateStatus(elementId, message, isSuccess = false, isError = false) {
           const element = document.getElementById(elementId);
           if (element) {
-            element.textContent = elementId.replace('-status', '').toUpperCase() + ': ' + message;
-            element.style.color = isSuccess ? '#00ff00' : '#ffffff';
+            const prefix = elementId.includes('camera') ? '📷' : 
+                          elementId.includes('ar') ? '🔍' : 
+                          elementId.includes('target') ? '🎯' : '📦';
+            element.innerHTML = `${prefix} ${elementId.replace('-status', '').toUpperCase()}: ${message}`;
+            element.style.color = isError ? '#ff4444' : isSuccess ? '#44ff44' : '#ffffff';
           }
-          console.log(elementId + ': ' + message);
+          console.log(`${elementId}: ${message}`);
         }
 
-        // Hide loading screen after a delay
+        // Auto-hide loading screen
         setTimeout(() => {
           const loading = document.getElementById('loading');
           if (loading) loading.style.display = 'none';
-        }, 5000);
+        }, 8000);
 
-        // Check if we can access camera
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          console.log('getUserMedia is supported');
-          updateStatus('camera-status', 'Requesting permission...');
-          
-          // Request camera permission explicitly for AR
-          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(function(stream) {
-              console.log('Camera permission granted');
-              updateStatus('camera-status', 'Permission granted ✓', true);
-              // Stop the stream as MindAR will handle it
-              stream.getTracks().forEach(track => track.stop());
-            })
-            .catch(function(err) {
-              console.error('Camera permission denied:', err);
-              updateStatus('camera-status', 'Permission denied ✗');
-              alert('Camera access is required for AR to work. Please allow camera access and refresh the page.');
-            });
-        } else {
-          console.error('getUserMedia is not supported');
-          updateStatus('camera-status', 'Not supported ✗');
-          alert('Your browser does not support camera access.');
+        // Check browser compatibility
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          updateStatus('camera-status', 'Not supported ❌', false, true);
+          alert('❌ Your browser does not support camera access for AR.');
+          return;
         }
 
-        // Listen for MindAR events
+        updateStatus('camera-status', 'Waiting for permission...', false, false);
+
+        // MindAR Event Listeners
         const sceneEl = document.querySelector('a-scene');
         if (sceneEl) {
+          
+          // AR Ready Event
           sceneEl.addEventListener('arReady', function() {
-            console.log('MindAR is ready');
-            updateStatus('ar-status', 'Ready ✓', true);
-            // Hide loading screen when AR is ready
+            console.log('✅ MindAR initialized successfully');
+            updateStatus('camera-status', 'Active ✅', true);
+            updateStatus('ar-status', 'Ready ✅', true);
+            
+            // Hide loading screen
             const loading = document.getElementById('loading');
             if (loading) loading.style.display = 'none';
           });
           
+          // AR Error Event
           sceneEl.addEventListener('arError', function(event) {
-            console.error('MindAR error:', event.detail);
-            updateStatus('ar-status', 'Error ✗');
-            alert('AR initialization failed. Please check if your targets.mind file is valid.');
+            console.error('❌ MindAR Error:', event.detail);
+            updateStatus('ar-status', 'Failed ❌', false, true);
+            updateStatus('camera-status', 'Error ❌', false, true);
+            alert('❌ AR failed to start. Please refresh and allow camera access.');
           });
 
-          // Additional debug events
+          // Target Detection Events
           sceneEl.addEventListener('targetFound', function() {
-            console.log('Target found!');
-            updateStatus('target-status', 'Found ✓', true);
+            console.log('🎯 Target detected!');
+            updateStatus('target-status', 'FOUND ✅', true);
           });
 
           sceneEl.addEventListener('targetLost', function() {
-            console.log('Target lost!');
-            updateStatus('target-status', 'Lost');
+            console.log('🔍 Target lost - keep searching...');
+            updateStatus('target-status', 'Searching...', false);
+          });
+
+          // Scene Load Event
+          sceneEl.addEventListener('loaded', function() {
+            console.log('🎬 A-Frame scene loaded');
+            updateStatus('ar-status', 'Scene loaded...', false);
           });
         }
 
-        // Check if 3D model loads
+        // 3D Model Event Listeners
         const model = document.querySelector('#ar-model');
         if (model) {
           model.addEventListener('model-loaded', function() {
-            console.log('3D model loaded successfully');
-            updateStatus('model-status', 'Loaded ✓', true);
+            console.log('📦 3D model loaded successfully');
+            updateStatus('model-status', 'Ready ✅', true);
           });
           
           model.addEventListener('model-error', function(event) {
-            console.error('3D model failed to load:', event.detail);
-            updateStatus('model-status', 'Load failed ✗');
+            console.error('❌ Model loading error:', event.detail);
+            updateStatus('model-status', 'Failed ❌', false, true);
           });
         }
 
-        // Add a test button to manually trigger events
+        // Add Test Button and Instructions
         setTimeout(() => {
           const debugDiv = document.getElementById('debug-info');
           if (debugDiv) {
+            // Test Button
             const testBtn = document.createElement('button');
-            testBtn.textContent = 'Test AR';
-            testBtn.style.cssText = 'margin-top: 10px; padding: 5px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer;';
+            testBtn.textContent = '🧪 Test AR';
+            testBtn.style.cssText = 'margin-top: 10px; padding: 8px 12px; background: #007acc; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 11px; width: 100%;';
             testBtn.onclick = function() {
-              console.log('=== AR TEST RESULTS ===');
-              console.log('Scene element:', document.querySelector('a-scene'));
-              console.log('Target element:', document.querySelector('[mindar-image-target]'));
-              console.log('Model element:', document.querySelector('#ar-model'));
-              console.log('Assets loaded:', document.querySelector('#base.glb'));
+              console.log('=== 🧪 AR DIAGNOSTIC TEST ===');
+              console.log('Scene:', !!document.querySelector('a-scene'));
+              console.log('Target:', !!document.querySelector('[mindar-image-target]'));
+              console.log('Model:', !!document.querySelector('#ar-model'));
+              console.log('Assets:', !!document.querySelector('#base.glb'));
+              console.log('Camera permission:', navigator.permissions ? 'Checking...' : 'Unknown');
             };
+            
+            // Instructions
+            const instructions = document.createElement('div');
+            instructions.innerHTML = `<hr style="margin: 10px 0; border: 1px solid #444;"><div style="font-size: 10px; line-height: 1.3;"><strong>📋 Instructions:</strong><br>1. Allow camera access<br>2. Point at your target image<br>3. Watch for 3D model!</div>`;
+            
             debugDiv.appendChild(testBtn);
+            debugDiv.appendChild(instructions);
           }
-        }, 2000);
+        }, 3000);
+
+        // Global error handler
+        window.addEventListener('error', function(e) {
+          console.error('🚨 Global error:', e.error);
+          updateStatus('ar-status', 'System error ❌', false, true);
+        });
+
+        console.log('✨ AR Debug System Ready');
       });
     </script>
   </body>
