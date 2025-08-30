@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Demo</title>
     
 <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -9,15 +10,72 @@
 <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
   </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+    <div id="loading" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border-radius: 10px;">
+      Loading AR...
+    </div>
+    
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false"
+      embedded
+      arjs="debugUIEnabled: false;"
+      ar-scene>
       <a-assets>
         <a-asset-item id="base.glb" src="./base.glb"></a-asset-item>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse"></a-camera>
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model rotation="0 0 0" position="0 0 0.1" scale="0.005 0.005 0.005" src="#base.glb" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"></a-gltf-model>
       </a-entity>
     </a-scene>
+
+    <script>
+      // Debug script to check camera permissions and MindAR initialization
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded');
+        
+        // Hide loading screen after a delay
+        setTimeout(() => {
+          const loading = document.getElementById('loading');
+          if (loading) loading.style.display = 'none';
+        }, 3000);
+
+        // Check if we can access camera
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          console.log('getUserMedia is supported');
+          
+          // Request camera permission explicitly
+          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(function(stream) {
+              console.log('Camera permission granted');
+              // Stop the stream as MindAR will handle it
+              stream.getTracks().forEach(track => track.stop());
+            })
+            .catch(function(err) {
+              console.error('Camera permission denied:', err);
+              alert('Camera access is required for AR to work. Please allow camera access and refresh the page.');
+            });
+        } else {
+          console.error('getUserMedia is not supported');
+          alert('Your browser does not support camera access.');
+        }
+
+        // Listen for MindAR events
+        const sceneEl = document.querySelector('a-scene');
+        if (sceneEl) {
+          sceneEl.addEventListener('arReady', function() {
+            console.log('MindAR is ready');
+          });
+          
+          sceneEl.addEventListener('arError', function(event) {
+            console.error('MindAR error:', event.detail);
+          });
+        }
+      });
+    </script>
   </body>
 </html>
