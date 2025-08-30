@@ -2,47 +2,24 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AR Demo</title>
+    <title>AR Demo - Basic Test</title>
     
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.prod.js"></script>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v7.0.0/dist/aframe-extras.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/dist/mindar-image.aframe.js"></script>
   </head>
   <body>
-    <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;" 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false"
-      embedded>
-      
-      <a-assets>
-        <a-asset-item id="base.glb" src="./base.glb"></a-asset-item>
-      </a-assets>
-
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      
-      <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Test with a simple box first -->
-        <a-box 
-          position="0 0 0.1" 
-          scale="0.1 0.1 0.1" 
-          color="red" 
-          animation="property: rotation; to: 0 360 0; dur: 2000; easing: linear; loop: true">
-        </a-box>
-        
-        <!-- Your GLB model (hidden for now) -->
-        <a-gltf-model 
-          rotation="0 0 0" 
-          position="0 0 0.1" 
-          scale="0.005 0.005 0.005" 
-          src="#base.glb" 
-          visible="false"
-          animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">
-        </a-gltf-model>
-      </a-entity>
+    <!-- First, let's test if A-Frame works without MindAR -->
+    <a-scene background="color: #000000">
+      <a-box position="0 0 -3" rotation="0 45 0" scale="2 2 2" color="#ff0000" animation="property: rotation; to: 0 405 0; dur: 2000; easing: linear; loop: true"></a-box>
+      <a-text position="0 2 -3" scale="3 3 3" color="white" value="A-FRAME TEST" align="center"></a-text>
+      <a-camera position="0 0 0"></a-camera>
     </a-scene>
+    
+    <div style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px;">
+      <strong>BASIC TEST MODE</strong><br>
+      If you see a spinning red box, A-Frame works!<br>
+      Next step: Add MindAR
+    </div>
   </body>
 </html>
