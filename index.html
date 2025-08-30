@@ -20,14 +20,12 @@
       renderer="colorManagement: true, physicallyCorrectLights" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false"
-      embedded
-      arjs="debugUIEnabled: false;"
-      ar-scene>
+      embedded>
       <a-assets>
         <a-asset-item id="base.glb" src="./base.glb"></a-asset-item>
       </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false" cursor="rayOrigin: mouse"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model rotation="0 0 0" position="0 0 0.1" scale="0.005 0.005 0.005" src="#base.glb" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate"></a-gltf-model>
       </a-entity>
@@ -48,17 +46,17 @@
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           console.log('getUserMedia is supported');
           
-          // Request camera permission explicitly
-          navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-            .then(function(stream) {
-              console.log('Camera permission granted');
-              // Stop the stream as MindAR will handle it
-              stream.getTracks().forEach(track => track.stop());
-            })
-            .catch(function(err) {
-              console.error('Camera permission denied:', err);
-              alert('Camera access is required for AR to work. Please allow camera access and refresh the page.');
-            });
+          // Don't request camera permission here - let MindAR handle it
+          // navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          //   .then(function(stream) {
+          //     console.log('Camera permission granted');
+          //     // Stop the stream as MindAR will handle it
+          //     stream.getTracks().forEach(track => track.stop());
+          //   })
+          //   .catch(function(err) {
+          //     console.error('Camera permission denied:', err);
+          //     alert('Camera access is required for AR to work. Please allow camera access and refresh the page.');
+          //   });
         } else {
           console.error('getUserMedia is not supported');
           alert('Your browser does not support camera access.');
@@ -69,10 +67,23 @@
         if (sceneEl) {
           sceneEl.addEventListener('arReady', function() {
             console.log('MindAR is ready');
+            // Hide loading screen when AR is ready
+            const loading = document.getElementById('loading');
+            if (loading) loading.style.display = 'none';
           });
           
           sceneEl.addEventListener('arError', function(event) {
             console.error('MindAR error:', event.detail);
+            alert('AR initialization failed. Please check if your targets.mind file is valid.');
+          });
+
+          // Additional debug events
+          sceneEl.addEventListener('targetFound', function() {
+            console.log('Target found!');
+          });
+
+          sceneEl.addEventListener('targetLost', function() {
+            console.log('Target lost!');
           });
         }
       });
