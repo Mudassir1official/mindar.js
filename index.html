@@ -3,19 +3,47 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MindAR.js demo</title>
+    <title>AR Business Card</title>
     <style>
       html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: transparent; }
       .loading { position: fixed; inset: 0; display: grid; place-items: center; color: #fff; font: 16px/1.4 system-ui, sans-serif; }
       .loading[hidden] { display: none; }
     </style>
-    <!-- A-Frame core -->
+    <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <!-- MindAR for A-Frame -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.4/dist/mindar-image-aframe.prod.js"></script>
+    <script>
+      // Simple clickable link component
+      AFRAME.registerComponent('link-button', {
+        schema: { url: {type: 'string'}, label: {type: 'string', default: ''} },
+        init() {
+          const el = this.el;
+          el.classList.add('clickable');
+          el.setAttribute('geometry', 'primitive: plane; width: 0.52; height: 0.14');
+          el.setAttribute('material', 'color: #ffffff; opacity: 0.95; shader: flat');
+          // label
+          const text = document.createElement('a-text');
+          text.setAttribute('value', this.data.label || this.data.url);
+          text.setAttribute('color', '#222');
+          text.setAttribute('align', 'center');
+          text.setAttribute('width', 1.5);
+          text.setAttribute('position', '0 0 0.01');
+          el.appendChild(text);
+          // hover feedback
+          el.addEventListener('mouseenter', () => el.setAttribute('material', 'color: #e6e6e6; opacity: 1; shader: flat'));
+          el.addEventListener('mouseleave', () => el.setAttribute('material', 'color: #ffffff; opacity: 0.95; shader: flat'));
+          // click → open link
+          el.addEventListener('click', () => {
+            const url = this.data.url;
+            if (url) window.open(url, '_blank');
+          });
+        }
+      });
+    </script>
   </head>
   <body>
-    <div id="loading" class="loading">Loading AR… If camera access is blocked, use HTTPS or localhost.</div>
+    <div id="loading" class="loading">Loading AR… Point the camera at your business card target.</div>
 
     <a-scene
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes; uiError: yes;"
@@ -25,24 +53,55 @@
       device-orientation-permission-ui="enabled: true"
       embedded
     >
-      <a-assets timeout="15000">
-        <a-asset-item id="model" src="./base.glb"></a-asset-item>
-      </a-assets>
+      <a-assets timeout="15000"></a-assets>
 
-      <!-- Lights for the GLB model -->
-      <a-entity light="type: ambient; intensity: 0.7"></a-entity>
-      <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
-
-      <!-- Target index 0 from targets.mind -->
+      <!-- Anchor to target 0 -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-gltf-model src="#model" position="0 0 0" rotation="0 0 0" scale="0.1 0.1 0.1"></a-gltf-model>
+        <!-- Card background -->
+        <a-plane width="1.8" height="1.05" color="#1f1f1f" opacity="0.92" position="0 0 0" material="shader: flat"></a-plane>
+
+        <!-- Avatar placeholder -->
+        <a-circle radius="0.12" color="#ffffff" position="-0.75 0.28 0.01"></a-circle>
+        <a-circle radius="0.11" color="#8888ff" position="-0.75 0.28 0.015"></a-circle>
+
+        <!-- Name and title -->
+        <a-text value="Your Name" position="-0.55 0.33 0.01" color="#fff" width="2" align="left"></a-text>
+        <a-text value="Your Title" position="-0.55 0.18 0.01" color="#d9d9d9" width="2" align="left"></a-text>
+
+        <!-- Preview panel placeholder -->
+        <a-plane width="0.62" height="0.42" position="0.33 0.20 0.01" color="#2b2b2b"></a-plane>
+
+        <!-- Buttons -->
+        <a-entity link-button="url: https://your-website.com; label: Website" position="-0.15 -0.02 0.02"></a-entity>
+        <a-entity link-button="url: https://twitter.com/yourhandle; label: Twitter" position="0.45 -0.02 0.02"></a-entity>
+
+        <!-- Bottom round icons -->
+        <a-entity position="0 -0.42 0.02">
+          <a-circle class="clickable" color="#ffffff" radius="0.06" position="-0.6 0 0"></a-circle>
+          <a-text value="🌐" position="-0.6 0 0.01" align="center" width="1"></a-text>
+
+          <a-circle class="clickable" color="#ffffff" radius="0.06" position="-0.3 0 0"></a-circle>
+          <a-text value="📞" position="-0.3 0 0.01" align="center" width="1"></a-text>
+
+          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0 0 0"></a-circle>
+          <a-text value="🎥" position="0 0 0.01" align="center" width="1"></a-text>
+
+          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0.3 0 0"></a-circle>
+          <a-text value="✉️" position="0.3 0 0.01" align="center" width="1"></a-text>
+
+          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0.6 0 0"></a-circle>
+          <a-text value="💼" position="0.6 0 0.01" align="center" width="1"></a-text>
+        </a-entity>
       </a-entity>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <!-- Camera + cursor for clicking -->
+      <a-camera position="0 0 0" look-controls="enabled: false">
+        <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
+      </a-camera>
     </a-scene>
 
     <script>
-      // Hide custom loader when A-Frame finishes
+      // Hide loader when scene is ready
       const loading = document.getElementById('loading');
       window.addEventListener('load', () => {
         const scene = document.querySelector('a-scene');
