@@ -40,6 +40,17 @@
           });
         }
       });
+
+      // Generic open-url to attach to any entity (e.g., icon planes)
+      AFRAME.registerComponent('open-url', {
+        schema: { url: { type: 'string' } },
+        init() {
+          this.el.classList.add('clickable');
+          this.el.addEventListener('click', () => {
+            if (this.data.url) window.open(this.data.url, '_blank');
+          });
+        }
+      });
     </script>
   </head>
   <body>
@@ -53,12 +64,21 @@
       device-orientation-permission-ui="enabled: true"
       embedded
     >
-      <a-assets timeout="15000"></a-assets>
+      <a-assets timeout="15000">
+        <!-- Autoplaying promo video (muted + playsinline required for mobile) -->
+        <video id="promo" src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" autoplay loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
+        <!-- Animated 3D model (Fox with built-in animations) -->
+        <a-asset-item id="fox" src="https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Fox/glTF-Binary/Fox.glb"></a-asset-item>
+      </a-assets>
 
       <!-- Anchor to target 0 -->
       <a-entity mindar-image-target="targetIndex: 0">
         <!-- Card background -->
         <a-plane width="1.8" height="1.05" color="#1f1f1f" opacity="0.92" position="0 0 0" material="shader: flat"></a-plane>
+
+        <!-- Soft lights for 3D model -->
+        <a-entity light="type: ambient; intensity: 0.9" position="0 1 0"></a-entity>
+        <a-entity light="type: directional; intensity: 0.8" position="0.4 1 0.6"></a-entity>
 
         <!-- Avatar placeholder -->
         <a-circle radius="0.12" color="#ffffff" position="-0.75 0.28 0.01"></a-circle>
@@ -68,29 +88,32 @@
         <a-text value="Your Name" position="-0.55 0.33 0.01" color="#fff" width="2" align="left"></a-text>
         <a-text value="Your Title" position="-0.55 0.18 0.01" color="#d9d9d9" width="2" align="left"></a-text>
 
-        <!-- Preview panel placeholder -->
-        <a-plane width="0.62" height="0.42" position="0.33 0.20 0.01" color="#2b2b2b"></a-plane>
+        <!-- Video panel -->
+        <a-video src="#promo" width="0.9" height="0.5" position="-0.35 0.0 0.02"></a-video>
 
-        <!-- Buttons -->
+        <!-- Animated model on the right -->
+        <a-entity position="0.75 -0.05 0.03" rotation="0 -25 0" scale="0.35 0.35 0.35">
+          <a-gltf-model src="#fox" animation-mixer="clip: Walk; loop: repeat; timeScale: 1"></a-gltf-model>
+        </a-entity>
+
+        <!-- Buttons (text buttons) -->
         <a-entity link-button="url: https://your-website.com; label: Website" position="-0.15 -0.02 0.02"></a-entity>
         <a-entity link-button="url: https://twitter.com/yourhandle; label: Twitter" position="0.45 -0.02 0.02"></a-entity>
 
-        <!-- Bottom round icons -->
-        <a-entity position="0 -0.42 0.02">
-          <a-circle class="clickable" color="#ffffff" radius="0.06" position="-0.6 0 0"></a-circle>
-          <a-text value="🌐" position="-0.6 0 0.01" align="center" width="1"></a-text>
-
-          <a-circle class="clickable" color="#ffffff" radius="0.06" position="-0.3 0 0"></a-circle>
-          <a-text value="📞" position="-0.3 0 0.01" align="center" width="1"></a-text>
-
-          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0 0 0"></a-circle>
-          <a-text value="🎥" position="0 0 0.01" align="center" width="1"></a-text>
-
-          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0.3 0 0"></a-circle>
-          <a-text value="✉️" position="0.3 0 0.01" align="center" width="1"></a-text>
-
-          <a-circle class="clickable" color="#ffffff" radius="0.06" position="0.6 0 0"></a-circle>
-          <a-text value="💼" position="0.6 0 0.01" align="center" width="1"></a-text>
+        <!-- Social icons row (clickable colored tiles) -->
+        <a-entity position="0 -0.42 0.03">
+          <!-- Instagram -->
+          <a-entity geometry="primitive: plane; width: 0.36; height: 0.16" material="color: #E1306C; opacity: 0.95; shader: flat" position="-0.6 0 0" open-url="url: https://instagram.com/yourhandle">
+            <a-text value="Instagram" color="#fff" align="center" width="1.5" position="0 0 0.01"></a-text>
+          </a-entity>
+          <!-- LinkedIn -->
+          <a-entity geometry="primitive: plane; width: 0.36; height: 0.16" material="color: #0A66C2; opacity: 0.95; shader: flat" position="0 0 0" open-url="url: https://www.linkedin.com/in/yourhandle">
+            <a-text value="LinkedIn" color="#fff" align="center" width="1.5" position="0 0 0.01"></a-text>
+          </a-entity>
+          <!-- Twitter/X -->
+          <a-entity geometry="primitive: plane; width: 0.36; height: 0.16" material="color: #1DA1F2; opacity: 0.95; shader: flat" position="0.6 0 0" open-url="url: https://twitter.com/yourhandle">
+            <a-text value="Twitter" color="#fff" align="center" width="1.5" position="0 0 0.01"></a-text>
+          </a-entity>
         </a-entity>
       </a-entity>
 
